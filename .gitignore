@@ -1,0 +1,15 @@
+# WeChat developer tools: local machine settings
+project.private.config.json
+
+# Generated previews and temporary exports
+preview/screenshots/
+
+# Local dependencies and caches
+node_modules/
+.env
+.env.*
+!.env.example
+*.log
+*.tmp
+.DS_Store
+Thumbs.db

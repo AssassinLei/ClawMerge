@@ -1,0 +1,10 @@
+{
+  "name": "paw-zoo",
+  "version": "1.2.0",
+  "private": true,
+  "description": "爪爪动物园 · 微信二合一小游戏",
+  "scripts": {
+    "test": "node --test tests/model.test.js tests/optimization.test.js tests/sound.test.js",
+    "preview": "node preview/server.js"
+  }
+}
