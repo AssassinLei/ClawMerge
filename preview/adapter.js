@@ -33,7 +33,10 @@
     getMenuButtonBoundingClientRect: () => params.has('capsule') ? ({ top: 50, bottom: 82, left: innerWidth - 98, right: innerWidth - 10, width: 88, height: 32 }) : null,
     getStorageSync: key => { const value = localStorage.getItem(key); return value ? JSON.parse(value) : null; },
     setStorageSync: (key, value) => localStorage.setItem(key, JSON.stringify(value)),
-    showModal: options => options.success({ confirm: confirm(options.title + '\n\n' + options.content), cancel: false }),
+    showModal: options => {
+      if (options.editable) { const value = prompt(options.title + '\n' + options.placeholderText, options.content || ''); options.success({confirm: value !== null, cancel: value === null, content: value || ''}); }
+      else { const accepted = confirm(options.title + '\n\n' + options.content); options.success({confirm: accepted, cancel: !accepted}); }
+    },
     onTouchStart: callback => handlers.start.push(callback), onTouchMove: callback => handlers.move.push(callback),
     onTouchEnd: callback => handlers.end.push(callback), onTouchCancel: callback => handlers.cancel.push(callback),
     onShow: callback => handlers.show.push(callback), onHide: callback => handlers.hide.push(callback),
@@ -49,5 +52,5 @@
   document.addEventListener('visibilitychange', () => emit(document.hidden ? 'hide' : 'show', {}));
   window.previewWx = wx;
   window.previewAudioPlays = [];
-  window.mergeGame = new (load('/js/merge/game'))(wx);
+  window.mergeGame = new (load('/js/merge/game2'))(wx);
 })();

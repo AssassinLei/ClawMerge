@@ -1,3 +1,3 @@
-const MergeGame = require('./js/merge/game');
+const MergeGame = require('./js/merge/game2');
 
 new MergeGame(wx);

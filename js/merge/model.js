@@ -1,7 +1,7 @@
 const { CONFIG, getChain, getItem, isValidItem } = require('./config');
 const cloneItem = item => item ? { chainId: item.chainId, level: item.level } : null;
 const cloneRequirement = item => Object.assign(cloneItem(item), { quantity: item.quantity });
-const natural = (value, fallback = 0) => Number.isSafeInteger(value) && value >= 0 ? value : fallback;
+const natural = (value, fallback = 0) => Number.isSafeInteger(value) && value >= 0 ? Math.min(value, 1000000000) : fallback;
 
 class GameModel {
   constructor(saved, random = Math.random) {
@@ -15,7 +15,7 @@ class GameModel {
     this.board = Array(CONFIG.columns * CONFIG.rows).fill(null);
     this.coins = 0; this.energy = CONFIG.initialEnergy; this.completed = 0; this.merges = 0;
     this.combo = 0; this.bestCombo = 0; this.soundEnabled = soundEnabled;
-    this.nextOrderId = 1; this.discovered = {}; this.orders = [];
+    this.nextOrderId = 1; this.discovered = Object.fromEntries(CONFIG.chains.map(chain => [chain.id, 0])); this.orders = [];
     const positions = this.board.map((_, index) => index);
     // Fisher-Yates sampling without replacement, so every starting position is fair.
     for (let i = positions.length - 1; i > 0; i--) {
@@ -40,7 +40,7 @@ class GameModel {
   validIndex(index) { return Number.isInteger(index) && index >= 0 && index < this.board.length; }
   discover(item) { this.discovered[item.chainId] = Math.max(this.discovered[item.chainId] || 0, item.level); }
   availableChains() {
-    return CONFIG.chains.filter(chain => CONFIG.producers.some(producer =>
+    return CONFIG.chains.filter(chain => CONFIG.producers.some(producer => !producer.unlock &&
       producer.outputs.some(output => output.chainId === chain.id && output.weight > 0 && isValidItem(output))));
   }
   validRequirement(order) {
@@ -132,13 +132,14 @@ class GameModel {
     return this.makeOrder(pool[Math.floor(this.roll() * pool.length)]);
   }
   fillOrders() { while (this.orders.length < CONFIG.orderSlots) this.orders.push(this.generateOrder(this.orders.length)); }
+  productionOutputs(producer) { return producer.outputs.filter(output => isValidItem(output) && output.weight > 0); }
   produce(producerId = CONFIG.producers[0].id) {
     const producer = CONFIG.producers.find(value => value.id === producerId);
     if (!producer) return { ok: false, reason: 'unknown-producer' };
     const empty = this.board.map((item, index) => item ? -1 : index).filter(index => index >= 0);
     if (!empty.length) return { ok: false, reason: 'full' };
     if (this.energy < producer.energyCost) return { ok: false, reason: 'energy' };
-    const outputs = producer.outputs.filter(output => isValidItem(output) && output.weight > 0);
+    const outputs = this.productionOutputs(producer);
     const total = outputs.reduce((sum, output) => sum + output.weight, 0);
     if (!total) return { ok: false, reason: 'unknown-producer' };
     const index = empty[Math.floor(this.roll() * empty.length)];
@@ -238,7 +239,7 @@ class GameModel {
     this.orders = []; this.nextOrderId = Math.max(1, natural(saved.nextOrderId, 1));
     const seen = new Set();
     if (Array.isArray(saved.orders)) saved.orders.slice(0, CONFIG.orderSlots).forEach(order => {
-      if (this.validOrder(order) && Number.isSafeInteger(order.id) && order.id > 0 && !seen.has(order.id)) {
+      if (this.validOrder(order) && Number.isSafeInteger(order.id) && order.id > 0 && order.id <= 1000000000 && !seen.has(order.id)) {
         seen.add(order.id); this.nextOrderId = Math.max(this.nextOrderId, order.id + 1);
         const requirements = this.requirements(order).map(cloneRequirement);
         const kind = order.kind === 'challenge' ? 'challenge' : 'normal';

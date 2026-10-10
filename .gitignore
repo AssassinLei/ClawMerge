@@ -3,13 +3,37 @@ project.private.config.json
 
 # Generated previews and temporary exports
 preview/screenshots/
+playwright-report/
+test-results/
+coverage/
+tmp/
+
+# Original artwork references (not runtime assets)
+/鼠.png
+/水豚.png
+/兔.png
+/肥嘟嘟.png
 
 # Local dependencies and caches
 node_modules/
+.cache/
+.eslintcache
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
 .env
 .env.*
 !.env.example
 *.log
 *.tmp
+*.bak
+*.swp
+*.swo
+*~
+
+# OS metadata
 .DS_Store
 Thumbs.db
+Desktop.ini
